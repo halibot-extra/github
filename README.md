@@ -9,7 +9,7 @@ How to use
 This module will spin up a server that will listen for github hook events. You
 will need to enable a hook in your github repository or organization and have it
 point to the server you are running this module on. The port number of the
-server can be changed with the `port` instance config field. It is recommended
+server can be changed with the `port` instance config field (9000 by default). It is recommended
 that you use a secret key shared between github and this module. This key can be
 set with the `secret` field.
 
