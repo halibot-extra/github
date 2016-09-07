@@ -7,7 +7,7 @@ from halibot import HalModule, Context, Message
 
 def make_issues_report(event, payload):
 	title = payload['issue']['title']
-	user = payload['issue']['user']['login']
+	user = payload['sender']['login']
 	repo = payload['repository']['full_name']
 
 	if payload['action'] == 'opened':
@@ -23,7 +23,7 @@ def make_issues_report(event, payload):
 
 def make_pr_report(event, payload):
 	title = payload['pull_request']['title']
-	user = payload['pull_request']['user']['login']
+	user = payload['sender']['login']
 	repo = payload['repository']['full_name']
 
 	if payload['action'] == 'opened':
@@ -33,7 +33,8 @@ def make_pr_report(event, payload):
 		return 'Pull request "{}" reopened by {} in {}.'.format(title, user, repo)
 
 	if payload['action'] == 'closed':
-		return 'Pull request "{}" closed by {} in {}.'.format(title, user, repo)
+		merged = '' if payload['pull_request']['merged'] else 'not '
+		return 'Pull request "{}" closed and {}merged by {} in {}.'.format(title, merged, user, repo)
 
 	return None
 
