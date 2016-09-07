@@ -3,7 +3,7 @@ import json
 import hmac, hashlib
 import threading
 import http, http.server
-from halibot import HalModule
+from halibot import HalModule, Context, Message
 
 def make_issues_report(event, payload):
 	title = payload['issue']['title']
@@ -88,13 +88,10 @@ class GithubHookHandler(http.server.BaseHTTPRequestHandler):
 
 			# Ignore events we don't know how to handle
 			if report != None:
-				msg = {
-					'body': report,
-					'author': 'halibot',
-					'context': config['context']
-				}
+				cxt = Context(**config['context'])
+				msg = Message(body=report, author='halibot', context=cxt)
 				module.log.debug('Reporting event to ' + config['context']['whom'])
-				module.send(msg)
+				module.reply(msg)
 			else:
 				module.log.warning('Could not form report for "{} {}"'.format(event, action))
 
