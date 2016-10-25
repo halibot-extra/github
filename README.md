@@ -32,7 +32,7 @@ Example config
     "github-example": {
       "of": "github",
       "secret": "sshhhh",
-      "dest": "irc0/##example"
+      "dest": "irc0/##example",
       "events": {
         "issues": [
           "opened",
