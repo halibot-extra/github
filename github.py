@@ -43,7 +43,7 @@ def make_report(event, payload):
 		'issues': make_issues_report,
 		'pull_request': make_pr_report,
 	}.get(event, None)
-	
+
 	if fun == None:
 		return None
 
@@ -60,13 +60,13 @@ class GithubHookHandler(http.server.BaseHTTPRequestHandler):
 			# Ignore and timeout
 			module.log.info('Received something that is not a github event, ignoring.')
 			return
-	
+
 		length = int(self.headers['Content-Length'])
 		data = self.rfile.read(length)
 
 		# Do hmac verification if enabled
 		# Enabling recommend so people don't send random garbage to the endpoint
-		if 'secret' in config and config['secret']:
+		if 'secret' in config:
 			h = hmac.new(config['secret'].encode(), msg=data, digestmod=hashlib.sha1)
 			expect = 'sha1=' + h.hexdigest()
 
@@ -81,7 +81,7 @@ class GithubHookHandler(http.server.BaseHTTPRequestHandler):
 		action = payload.get('action', None)
 
 		module.log.debug('Received {} {} event.'.format(event, action))
-		
+
 		# ignore events we didn't ask for
 		events = module.events
 		if event in events and action in events[event]:
@@ -104,7 +104,6 @@ class Github(HalModule):
 		'secret': {
 			'type'   : 'string',
 			'prompt' : 'Shared secret',
-			'default': None,
 		},
 		'dest': {
 			'type'   : 'string',
@@ -116,6 +115,33 @@ class Github(HalModule):
 			'default': 9000,
 		},
 	}
+
+	# Override the configure method so we can do more complicated configuration prompts
+	@classmethod
+	def configure(cls, config):
+		(name, config) = super(Github, Github).configure(config)
+
+		def promptYn(prompt):
+			yn = input(prompt + '? [Y/n] ')
+			if len(yn) < 1: return True
+			return yn[0].upper() == 'Y'
+
+		issues = []
+		prs = []
+
+		if promptYn('List for opened issues'):   issues.append('opened')
+		if promptYn('List for reopened issues'): issues.append('reopened')
+		if promptYn('List for closed issues'):   issues.append('closed')
+		if promptYn('List for opened pull requests'):   prs.append('opened')
+		if promptYn('List for reopened pull requests'): prs.append('reopened')
+		if promptYn('List for closed pull requests'):   prs.append('closed')
+
+		config['events'] = {
+			'issues': issues,
+			'pull_request': prs,
+		}
+
+		return (name, config)
 
 	def init(self):
 		self.events = self.config.get('events', {})
