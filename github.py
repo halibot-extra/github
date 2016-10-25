@@ -66,7 +66,7 @@ class GithubHookHandler(http.server.BaseHTTPRequestHandler):
 
 		# Do hmac verification if enabled
 		# Enabling recommend so people don't send random garbage to the endpoint
-		if 'secret' in config:
+		if 'secret' in config and config['secret']:
 			h = hmac.new(config['secret'].encode(), msg=data, digestmod=hashlib.sha1)
 			expect = 'sha1=' + h.hexdigest()
 
@@ -89,17 +89,33 @@ class GithubHookHandler(http.server.BaseHTTPRequestHandler):
 
 			# Ignore events we don't know how to handle
 			if report != None:
-				cxt = Context(**config['context'])
-				msg = Message(body=report, author='halibot', context=cxt)
-				module.log.debug('Reporting event to ' + config['context']['whom'])
-				module.reply(msg)
+				msg = Message(body=report, author='halibot')
+				module.log.debug('Reporting event to ' + config['dest'])
+				module.send_to(msg, [ config['dest'] ])
 			else:
 				module.log.warning('Could not form report for "{} {}"'.format(event, action))
 
 		self.send_response(204)
 		self.end_headers()
 
-class GithubModule(HalModule):
+class Github(HalModule):
+
+	options = {
+		'secret': {
+			'type'   : 'string',
+			'prompt' : 'Shared secret',
+			'default': None,
+		},
+		'dest': {
+			'type'   : 'string',
+			'prompt' : 'Destination',
+		},
+		'port': {
+			'type'   : 'int',
+			'prompt' : 'Port to listen on',
+			'default': 9000,
+		},
+	}
 
 	def init(self):
 		self.events = self.config.get('events', {})
