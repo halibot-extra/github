@@ -3,7 +3,7 @@ import json
 import hmac, hashlib
 import threading
 import http, http.server
-from halibot import HalModule, Context, Message
+from halibot import HalModule, Message
 
 def make_issues_report(event, payload):
 	title = payload['issue']['title']
